@@ -14,7 +14,24 @@ namespace Roslyn.Utilities
     /// </summary>
     internal static partial class UnicodeCharacterUtilities
     {
-        public static bool IsIdentifierStartCharacter(char ch)
+        private static UnicodeCategory GetUnicodeCategory(int ch)
+        {
+#if NETCOREAPP
+            return CharUnicodeInfo.GetUnicodeCategory(ch);
+#else
+            if (ch < 0x10000)
+            {
+                return CharUnicodeInfo.GetUnicodeCategory((char)ch);
+            }
+            else
+            {
+                string s = char.ConvertFromUtf32(ch);
+                return CharUnicodeInfo.GetUnicodeCategory(s, 0);
+            }
+#endif
+        }
+
+        public static bool IsIdentifierStartCharacter(int ch)
         {
             // identifier-start-character:
             //   letter-character
@@ -41,14 +58,14 @@ namespace Roslyn.Utilities
                 return false;
             }
 
-            return IsLetterChar(CharUnicodeInfo.GetUnicodeCategory(ch));
+            return IsLetterChar(GetUnicodeCategory(ch));
         }
 
         /// <summary>
         /// Returns true if the Unicode character can be a part of an identifier.
         /// </summary>
         /// <param name="ch">The Unicode character.</param>
-        public static bool IsIdentifierPartCharacter(char ch)
+        public static bool IsIdentifierPartCharacter(int ch)
         {
             // identifier-part-character:
             //   letter-character
@@ -79,7 +96,7 @@ namespace Roslyn.Utilities
                 return false;
             }
 
-            UnicodeCategory cat = CharUnicodeInfo.GetUnicodeCategory(ch);
+            UnicodeCategory cat = GetUnicodeCategory(ch);
             return IsLetterChar(cat)
                 || IsDecimalDigitChar(cat)
                 || IsConnectingChar(cat)
@@ -172,11 +189,11 @@ namespace Roslyn.Utilities
         /// Returns true if the Unicode character is a formatting character (Unicode class Cf).
         /// </summary>
         /// <param name="ch">The Unicode character.</param>
-        internal static bool IsFormattingChar(char ch)
+        internal static bool IsFormattingChar(int ch)
         {
             // There are no FormattingChars in ASCII range
 
-            return ch > 127 && IsFormattingChar(CharUnicodeInfo.GetUnicodeCategory(ch));
+            return ch > 127 && IsFormattingChar(GetUnicodeCategory(ch));
         }
 
         /// <summary>
