@@ -173,10 +173,28 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
 
         /// <summary>
+        /// Returns true if the Unicode character can be the starting character of a C# identifier.
+        /// </summary>
+        /// <param name="ch">The Unicode character.</param>
+        public static bool IsIdentifierStartCharacter(int ch)
+        {
+            return UnicodeCharacterUtilities.IsIdentifierStartCharacter(ch);
+        }
+
+        /// <summary>
         /// Returns true if the Unicode character can be a part of a C# identifier.
         /// </summary>
         /// <param name="ch">The Unicode character.</param>
         public static bool IsIdentifierPartCharacter(char ch)
+        {
+            return UnicodeCharacterUtilities.IsIdentifierPartCharacter(ch);
+        }
+
+        /// <summary>
+        /// Returns true if the Unicode character can be a part of a C# identifier.
+        /// </summary>
+        /// <param name="ch">The Unicode character.</param>
+        public static bool IsIdentifierPartCharacter(int ch)
         {
             return UnicodeCharacterUtilities.IsIdentifierPartCharacter(ch);
         }

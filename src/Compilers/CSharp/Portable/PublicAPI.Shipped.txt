@@ -4921,7 +4921,9 @@ static Microsoft.CodeAnalysis.CSharp.SyntaxFacts.IsDocumentationCommentTrivia(Mi
 static Microsoft.CodeAnalysis.CSharp.SyntaxFacts.IsFixedStatementExpression(Microsoft.CodeAnalysis.SyntaxNode node) -> bool
 static Microsoft.CodeAnalysis.CSharp.SyntaxFacts.IsGlobalMemberDeclaration(Microsoft.CodeAnalysis.CSharp.SyntaxKind kind) -> bool
 static Microsoft.CodeAnalysis.CSharp.SyntaxFacts.IsIdentifierPartCharacter(char ch) -> bool
+static Microsoft.CodeAnalysis.CSharp.SyntaxFacts.IsIdentifierPartCharacter(int ch) -> bool
 static Microsoft.CodeAnalysis.CSharp.SyntaxFacts.IsIdentifierStartCharacter(char ch) -> bool
+static Microsoft.CodeAnalysis.CSharp.SyntaxFacts.IsIdentifierStartCharacter(int ch) -> bool
 static Microsoft.CodeAnalysis.CSharp.SyntaxFacts.IsIndexed(Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax node) -> bool
 static Microsoft.CodeAnalysis.CSharp.SyntaxFacts.IsInNamespaceOrTypeContext(Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax node) -> bool
 static Microsoft.CodeAnalysis.CSharp.SyntaxFacts.IsInstanceExpression(Microsoft.CodeAnalysis.CSharp.SyntaxKind token) -> bool
