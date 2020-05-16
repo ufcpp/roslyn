@@ -30,6 +30,18 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
             AssertTokens("a\u0062", Token(SyntaxKind.IdentifierToken, "a\u0062", "ab"));
             AssertTokens("&#x61;b", Token(SyntaxKind.IdentifierToken, "&#x61;b", "ab"));
             AssertTokens("a&#x62;", Token(SyntaxKind.IdentifierToken, "a&#x62;", "ab"));
+
+            AssertTokens("α", Token(SyntaxKind.IdentifierToken, "α"));
+            AssertTokens("ひらがな", Token(SyntaxKind.IdentifierToken, "ひらがな"));
+            AssertTokens("漢字", Token(SyntaxKind.IdentifierToken, "漢字"));
+
+            AssertTokens("𩸽", Token(SyntaxKind.IdentifierToken, "𩸽"));
+            AssertTokens("𓄿", Token(SyntaxKind.IdentifierToken, "𓄿"));
+            AssertTokens("𒀀", Token(SyntaxKind.IdentifierToken, "𒀀"));
+
+            //todo: unicode escape sequence
+            //AssertTokens("\\U00029E3D", Token(SyntaxKind.IdentifierToken, "\\U00029E3D"));
+            //AssertTokens("\\uD867\\uDE3D", Token(SyntaxKind.IdentifierToken, "\\uD867\\uDE3D"));
         }
 
         [Fact]
