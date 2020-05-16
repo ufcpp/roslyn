@@ -2754,6 +2754,22 @@ class A { }
                 new DirectiveInfo { Kind = SyntaxKind.DefineDirectiveTrivia, Status = NodeStatus.IsActive, Text = "" });
         }
 
+        [Fact]
+        [Trait("Feature", "Directives")]
+        public void aaaa()
+        {
+            var text = @"
+#define 𩸽
+class A { }
+";
+            var node = Parse(text);
+            TestRoundTripping(node, text);
+            string defSym = "𩸽";
+            VerifyDirectivesSpecial(node, new DirectiveInfo { Kind = SyntaxKind.DefineDirectiveTrivia, Status = NodeStatus.IsActive, Text = defSym });
+            VerifyMembers(node,
+                new MemberInfo { Kind = SyntaxKind.ClassDeclaration, Status = NodeStatus.Unspecified, Status2 = NodeStatus.Defined, Text = defSym });
+        }
+
         #endregion
 
         #region #error/#warning

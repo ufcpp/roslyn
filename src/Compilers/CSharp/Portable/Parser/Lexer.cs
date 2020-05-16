@@ -2949,7 +2949,20 @@ top:
                         goto case '\n';
                     }
 
-                    if (SyntaxFacts.IsIdentifierStartCharacter(character))
+                    int codepoint = character;
+                    if (char.IsHighSurrogate(character))
+                    {
+                        char consumedSurrogate = TextWindow.NextChar();
+
+                        if (!char.IsLowSurrogate(consumedSurrogate))
+                        {
+                            //todo: AddError(error)
+                        }
+
+                        codepoint = CodePoint(character, consumedSurrogate);
+                    }
+
+                    if (SyntaxFacts.IsIdentifierStartCharacter(codepoint))
                     {
                         this.ScanIdentifierOrKeyword(ref info);
                     }
