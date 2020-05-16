@@ -450,6 +450,23 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
 
         [Fact]
         [Trait("Feature", "Identifiers")]
+        public void TestSurrogate()
+        {
+            var text = "\U00029E3D";
+            var token = LexToken(text);
+
+            Assert.NotEqual(default, token);
+            Assert.Equal(SyntaxKind.IdentifierToken, token.Kind());
+            Assert.Equal(text, token.Text);
+            var errors = token.Errors();
+            Assert.Equal(0, errors.Length);
+            Assert.NotNull(token.ValueText);
+            Assert.IsType<string>(token.ValueText);
+            Assert.Equal(2, ((string)token.ValueText).Length);
+        }
+
+        [Fact]
+        [Trait("Feature", "Identifiers")]
         public void TestMixedUnicodeEscapeIdentifier()
         {
             var text = "a\\u1234b";

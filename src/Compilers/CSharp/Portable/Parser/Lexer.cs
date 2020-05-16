@@ -905,9 +905,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax
                     break;
 
                 default:
-                    if (surrogateCharacter != SlidingTextWindow.InvalidCharacter && char.IsHighSurrogate(character) && char.IsLowSurrogate(TextWindow.PeekChar(1)))
+                    if (surrogateCharacter == SlidingTextWindow.InvalidCharacter && char.IsHighSurrogate(character))
                     {
                         surrogateCharacter = TextWindow.PeekChar(1);
+                        if (!char.IsLowSurrogate(surrogateCharacter))
+                        {
+                            //todo: error
+                        }
                     }
 
                     int codePoint = CodePoint(character, surrogateCharacter);
@@ -1831,18 +1835,23 @@ top:
                             if (ch > 127)
                             {
                                 // This can not accept Unicode-escaped low surrogates
-                                if (surrogateCharacter != SlidingTextWindow.InvalidCharacter && char.IsHighSurrogate(ch) && char.IsLowSurrogate(TextWindow.PeekChar(1)))
+                                if (surrogateCharacter == SlidingTextWindow.InvalidCharacter && char.IsHighSurrogate(ch))
                                 {
                                     surrogateCharacter = TextWindow.PeekChar(1);
+
+                                    if (!char.IsLowSurrogate(surrogateCharacter))
+                                    {
+                                        //todo: AddError
+                                    }
                                 }
 
                                 int codePoint = CodePoint(ch, surrogateCharacter);
 
-                                if (_identLen == 0 && ch > 127 && SyntaxFacts.IsIdentifierStartCharacter(codePoint))
+                                if (_identLen == 0 && SyntaxFacts.IsIdentifierStartCharacter(codePoint))
                                 {
                                     break;
                                 }
-                                else if (_identLen > 0 && ch > 127 && SyntaxFacts.IsIdentifierPartCharacter(codePoint))
+                                else if (_identLen > 0 && SyntaxFacts.IsIdentifierPartCharacter(codePoint))
                                 {
                                     if (UnicodeCharacterUtilities.IsFormattingChar(codePoint))
                                     {
