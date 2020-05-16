@@ -11017,6 +11017,26 @@ class C
         }
 
         [Fact]
+        public void aaaaaa()
+        {
+            var parsedArgs = DefaultParse(new[] { "/define:𓄿𒀀𠀀", "a.cs" }, WorkingDirectory);
+            parsedArgs.Errors.Verify();
+
+            parsedArgs = DefaultParse(new[] { "/define:\U0001313F\U00012000\U00020000", "a.cs" }, WorkingDirectory);
+            parsedArgs.Errors.Verify();
+
+            parsedArgs = DefaultParse(new[] { "/define:😊😂🤣", "a.cs" }, WorkingDirectory);
+            parsedArgs.Errors.Verify(
+                // warning CS2029: Invalid name for a preprocessing symbol; '😊😂🤣' is not a valid identifier
+                Diagnostic(ErrorCode.WRN_DefineIdentifierRequired).WithArguments("😊😂🤣").WithLocation(1, 1));
+
+            parsedArgs = DefaultParse(new[] { "/define:abc😊", "a.cs" }, WorkingDirectory);
+            parsedArgs.Errors.Verify(
+                // warning CS2029: Invalid name for a preprocessing symbol; 'abc😊' is not a valid identifier
+                Diagnostic(ErrorCode.WRN_DefineIdentifierRequired).WithArguments("abc😊").WithLocation(1, 1));
+        }
+
+        [Fact]
         public void CompilingCodeWithInvalidLanguageVersionShouldProvideDiagnostics()
         {
             var parsedArgs = DefaultParse(new[] { "/langversion:1000", "a.cs" }, WorkingDirectory);
