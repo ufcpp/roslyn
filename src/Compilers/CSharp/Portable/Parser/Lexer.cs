@@ -2127,9 +2127,13 @@ top:
                             if (consumedChar > 127)
                             {
                                 // This can not accept Unicode-escaped low surrogates
-                                if (consumedSurrogate != SlidingTextWindow.InvalidCharacter && char.IsHighSurrogate(consumedChar) && char.IsLowSurrogate(TextWindow.PeekChar()))
+                                if (consumedSurrogate == SlidingTextWindow.InvalidCharacter && char.IsHighSurrogate(consumedChar))
                                 {
                                     consumedSurrogate = TextWindow.NextChar();
+                                    if (!char.IsLowSurrogate(consumedSurrogate))
+                                    {
+                                        //todo: AddCrefError
+                                    }
                                 }
 
                                 int codePoint = CodePoint(consumedChar, consumedSurrogate);
