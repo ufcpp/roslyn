@@ -114,17 +114,60 @@ namespace Roslyn.Utilities
                 return false;
             }
 
-            if (!IsIdentifierStartCharacter(name[0]))
-            {
-                return false;
-            }
-
+            int i = 1;
             int nameLength = name.Length;
-            for (int i = 1; i < nameLength; i++) //NB: start at 1
+
+            char c0 = name[0];
+            if (!IsIdentifierStartCharacter(c0))
             {
-                if (!IsIdentifierPartCharacter(name[i]))
+                if (char.IsHighSurrogate(c0) && 1 < nameLength)
+                {
+                    char c1 = name[1];
+                    if (!char.IsLowSurrogate(c1))
+                    {
+                        return false;
+                    }
+
+                    int c = char.ConvertToUtf32(c0, c1);
+
+                    if (!IsIdentifierStartCharacter(c))
+                    {
+                        return false;
+                    }
+
+                    i = 2;
+                }
+                else
                 {
                     return false;
+                }
+            }
+
+            for (; i < nameLength; i++)
+            {
+                c0 = name[i];
+                if (!IsIdentifierPartCharacter(c0))
+                {
+                    if (char.IsHighSurrogate(c0))
+                    {
+                        i++;
+                        if (i >= nameLength)
+                        {
+                            return false;
+                        }
+
+                        char c1 = name[i];
+                        int c = char.ConvertToUtf32(c0, c1);
+
+                        if (!IsIdentifierPartCharacter(c))
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
             }
 

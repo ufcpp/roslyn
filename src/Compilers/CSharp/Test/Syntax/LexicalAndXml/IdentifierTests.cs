@@ -21,6 +21,13 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
             new [] { "\u02B0\u02B1" }, // ʰʱ (Lm category)
             new [] { "\u2160\u2161" }, // ⅠⅡ (Nl category)
             new [] { "a\u203Fb\u2040c" }, // Tie (Pc category)
+            // Surrogate Pairs
+            new [] { "\U00013000" }, // 𓀀 (Egyptian Hieroglyph)
+            new [] { "\U00012000" }, // 𒀀 (Cuneiform)
+            new [] { "\U00010480\U00010481\U000104A0\U000104A1" }, // 𐒀𐒁𐒠𐒡 (Osmanya Letter + Digit)
+            new [] { "\U0001D538\U0001D7D8" }, // double-struck A0
+            new [] { "\U00020000" }, // 𠀀 (Supplementary Ideographic Plane)
+            new [] { "\u845B\U000E0100" }, // 葛󠄀 (葛 + Ideographic Variation Selector)
         };
 
         public static readonly object[][] InvalidIdentifiers =
@@ -41,6 +48,11 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
             new [] { "a\uDF00" },
             new [] { "\uDF00a" },
             new [] { "\uD800\u200D\uDF00" }, // ZWJ between a valid surrogate pair 𐌀 (Old Italic A)
+            // Surrogate Pairs
+            new [] { "\U000104A0\U000104A1" }, // 𐒠𐒡 (Osmanya Digit)
+            new [] { "\U0001F600" }, // 😀 (Emoji)
+            new [] { "\U00020000\U0001F600\U00020000" }, // (Emoji between Letters)
+            new [] { "\U0001D7D8\U0001D538" }, // double-struck 0A
         };
 
         [Theory]
