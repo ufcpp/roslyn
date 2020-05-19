@@ -1856,6 +1856,21 @@ class C
         }
 
         [Fact]
+        public void DefineSurrogatePair()
+        {
+            var parsedArgs = DefaultParse(new[] { "/define:\U00013000", "a.cs" }, WorkingDirectory);
+            parsedArgs.Errors.Verify();
+
+            parsedArgs = DefaultParse(new[] { "/define:\U00013000,\u845B\U000E0100,\U00010480\U00010481\U000104A0\U000104A1", "a.cs" }, WorkingDirectory);
+            parsedArgs.Errors.Verify();
+
+            parsedArgs = DefaultParse(new[] { "/define:\U0001F600", "a.cs" }, WorkingDirectory);
+            parsedArgs.Errors.Verify(
+                // warning CS2029: Invalid name for a preprocessing symbol; '😊' is not a valid identifier
+                Diagnostic(ErrorCode.WRN_DefineIdentifierRequired).WithArguments("\U0001F600").WithLocation(1, 1));
+        }
+
+        [Fact]
         public void Debug()
         {
             var platformPdbKind = PathUtilities.IsUnixLikePlatform ? DebugInformationFormat.PortablePdb : DebugInformationFormat.Pdb;
