@@ -4417,6 +4417,61 @@ class enable
 
         #endregion
 
+        #region identifier
+
+        public static IEnumerable<object[]> Identifiers = IdentifierTestData.Identifiers;
+
+        [Theory]
+        [MemberData(nameof(Identifiers))]
+        public void TestDefineValidIdentifiers(bool valid, string text, string valueText)
+        {
+            var source = @"
+#define " + text + @"
+class A { }
+";
+            var node = Parse(source);
+
+            if (valid)
+            {
+                VerifyDirectivesSpecial(node, new DirectiveInfo { Kind = SyntaxKind.DefineDirectiveTrivia, Status = NodeStatus.IsActive, Text = valueText });
+                VerifyMembers(node,
+                    new MemberInfo { Kind = SyntaxKind.ClassDeclaration, Status = NodeStatus.Unspecified, Status2 = NodeStatus.Defined, Text = valueText });
+            }
+            else
+            {
+                var error = node.GetDiagnostics().Single();
+                Assert.Equal((int)ErrorCode.ERR_IdentifierExpected, error.Code);
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(Identifiers))]
+        public void TestIfValidIdentifiers(bool valid, string text, string valueText)
+        {
+            var source = @"
+#if " + text + @"
+#endif
+";
+            var node = Parse(source, valueText);
+
+            if (valid)
+            {
+                TestRoundTripping(node, source);
+                VerifyDirectivesSpecial(node,
+                    new DirectiveInfo { Kind = SyntaxKind.IfDirectiveTrivia, Status = NodeStatus.IsActive | NodeStatus.BranchTaken | NodeStatus.TrueValue },
+                    new DirectiveInfo { Kind = SyntaxKind.EndIfDirectiveTrivia, Status = NodeStatus.IsActive });
+            }
+            else
+            {
+                var diagnostics = node.GetDiagnostics();
+                Assert.Equal(2, diagnostics.Count());
+                Assert.Equal((int)ErrorCode.ERR_InvalidPreprocExpr, diagnostics.First().Code);
+            }
+        }
+
+
+        #endregion
+
         private static string GetExpectedVersion()
         {
             return CommonCompiler.GetProductVersion(typeof(CSharpCompiler));
