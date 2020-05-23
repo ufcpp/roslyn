@@ -2972,6 +2972,16 @@ top:
                             this.ScanIdentifierOrKeyword(ref info);
                             break;
                         }
+                        else if (char.IsHighSurrogate(character) && char.IsLowSurrogate(surrogateCharacter))
+                        {
+                            int codePoint = char.ConvertToUtf32(character, surrogateCharacter);
+
+                            if (SyntaxFacts.IsIdentifierStartCharacter(codePoint))
+                            {
+                                this.ScanIdentifierOrKeyword(ref info);
+                                break;
+                            }
+                        }
 
                         goto default;
                     }
@@ -2986,6 +2996,20 @@ top:
                     {
                         this.ScanIdentifierOrKeyword(ref info);
                     }
+                    else if(char.IsHighSurrogate(character))
+                    {
+                        char low = TextWindow.PeekChar(1);
+
+                        if (char.IsLowSurrogate(low))
+                        {
+                            int codePoint = char.ConvertToUtf32(character, low);
+
+                            if (SyntaxFacts.IsIdentifierStartCharacter(codePoint))
+                            {
+                                this.ScanIdentifierOrKeyword(ref info);
+                            }
+                        }
+                    }
                     else
                     {
                         // unknown single character
@@ -2998,6 +3022,11 @@ top:
                         else
                         {
                             TextWindow.AdvanceChar();
+
+                            if (char.IsHighSurrogate(character) && char.IsLowSurrogate(TextWindow.PeekChar()))
+                            {
+                                TextWindow.AdvanceChar();
+                            }
                         }
 
                         info.Kind = SyntaxKind.None;
