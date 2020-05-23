@@ -877,7 +877,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax
                         character = TextWindow.PeekCharOrUnicodeEscape(out surrogateCharacter);
 
                         isEscaped = true;
-                        if (SyntaxFacts.IsIdentifierStartCharacter(character))
+                        if (SyntaxFacts.IsIdentifierStartCharacter(character) || char.IsHighSurrogate(character))
                         {
                             goto case 'a';
                         }
@@ -910,6 +910,21 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax
                         goto case 'a';
                     }
 
+                    if ((char.IsHighSurrogate(character)))
+                    {
+                        char low = TextWindow.PeekChar(1);
+
+                        if (char.IsLowSurrogate(low))
+                        {
+                            int codePoint = char.ConvertToUtf32(character, low);
+
+                            if (SyntaxFacts.IsIdentifierStartCharacter(codePoint))
+                            {
+                                goto case 'a';
+                            }
+                        }
+                    }
+
                     if (isEscaped)
                     {
                         SyntaxDiagnosticInfo error;
@@ -919,6 +934,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax
                     else
                     {
                         TextWindow.AdvanceChar();
+
+                        if (char.IsHighSurrogate(character) && char.IsLowSurrogate(TextWindow.PeekChar()))
+                        {
+                            TextWindow.AdvanceChar();
+                        }
                     }
 
                     if (_badTokenCount++ > 200)
@@ -1822,36 +1842,52 @@ top:
                     default:
                         {
                             // This is the 'expensive' call
-                            if (_identLen == 0 && ch > 127 && SyntaxFacts.IsIdentifierStartCharacter(ch))
+                            if (ch > 127)
                             {
-                                break;
-                            }
-                            else if (_identLen > 0 && ch > 127 && SyntaxFacts.IsIdentifierPartCharacter(ch))
-                            {
-                                //// BUG 424819 : Handle identifier chars > 0xFFFF via surrogate pairs
-                                if (UnicodeCharacterUtilities.IsFormattingChar(ch))
+                                int codePoint = ch;
+                                if (surrogateCharacter == SlidingTextWindow.InvalidCharacter && char.IsHighSurrogate(ch))
                                 {
-                                    if (isEscaped)
-                                    {
-                                        SyntaxDiagnosticInfo error;
-                                        TextWindow.NextCharOrUnicodeEscape(out surrogateCharacter, out error);
-                                        AddError(error);
-                                    }
-                                    else
-                                    {
-                                        TextWindow.AdvanceChar();
-                                    }
-
-                                    continue; // Ignore formatting characters
+                                    surrogateCharacter = TextWindow.PeekChar(1);
                                 }
 
-                                break;
+                                if (surrogateCharacter != SlidingTextWindow.InvalidCharacter)
+                                {
+                                    if (!char.IsLowSurrogate(surrogateCharacter))
+                                    {
+                                        goto LoopExit;
+                                    }
+
+                                    codePoint = char.ConvertToUtf32(ch, surrogateCharacter);
+                                }
+
+                                if (_identLen == 0 && SyntaxFacts.IsIdentifierStartCharacter(codePoint))
+                                {
+                                    break;
+                                }
+                                else if (_identLen > 0 && SyntaxFacts.IsIdentifierPartCharacter(codePoint))
+                                {
+                                    if (UnicodeCharacterUtilities.IsFormattingChar(codePoint))
+                                    {
+                                        if (isEscaped)
+                                        {
+                                            SyntaxDiagnosticInfo error;
+                                            TextWindow.NextCharOrUnicodeEscape(out surrogateCharacter, out error);
+                                            AddError(error);
+                                        }
+                                        else
+                                        {
+                                            TextWindow.AdvanceChar();
+                                        }
+
+                                        continue; // Ignore formatting characters
+                                    }
+
+                                    break;
+                                }
                             }
-                            else
-                            {
-                                // Not a valid identifier character, so bail.
-                                goto LoopExit;
-                            }
+
+                            // Not a valid identifier character, so bail.
+                            goto LoopExit;
                         }
                 }
 
@@ -1864,6 +1900,11 @@ top:
                 else
                 {
                     TextWindow.AdvanceChar();
+
+                    if (surrogateCharacter != SlidingTextWindow.InvalidCharacter)
+                    {
+                        TextWindow.AdvanceChar();
+                    }
                 }
 
                 this.AddIdentChar(ch);
