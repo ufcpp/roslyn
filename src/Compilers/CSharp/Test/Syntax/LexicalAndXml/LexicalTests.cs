@@ -541,6 +541,40 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
             Assert.Equal(3, ((string)token.ValueText).Length);
         }
 
+        public static IEnumerable<object[]> Identifiers = IdentifierTestData.Identifiers;
+
+        [Theory]
+        [Trait("Feature", "Identifiers")]
+        [MemberData(nameof(Identifiers))]
+        public void TestValidIdentifier(bool valid, string text, string valueText)
+        {
+            var token = LexToken(text);
+
+            Assert.NotEqual(default, token);
+            Assert.Equal(text, token.Text);
+
+            if (valid)
+            {
+                Assert.Equal(SyntaxKind.IdentifierToken, token.Kind());
+                var errors = token.Errors();
+                Assert.Equal(0, errors.Length);
+                Assert.Equal(valueText, token.ValueText);
+            }
+            else
+            {
+                Assert.NotEqual(SyntaxKind.IdentifierToken, token.Kind());
+
+                if (token.Kind() == SyntaxKind.BadToken)
+                {
+                    var errors = token.Errors();
+                    Assert.Equal(1, errors.Length);
+                    Assert.Equal((int)ErrorCode.ERR_UnexpectedCharacter, errors.First().Code);
+                }
+
+                Assert.Equal(valueText, token.ValueText);
+            }
+        }
+
         [Fact]
         [Trait("Feature", "Keywords")]
         public void TestAllLanguageKeywords()
