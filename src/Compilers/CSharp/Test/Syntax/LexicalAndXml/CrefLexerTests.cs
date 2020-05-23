@@ -22,12 +22,12 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
         public void TestLexIdentifiers()
         {
             AssertTokens("a", Token(SyntaxKind.IdentifierToken, "a"));
-            AssertTokens("\u0061", Token(SyntaxKind.IdentifierToken, "\u0061", "a"));
+            AssertTokens("\\u0061", Token(SyntaxKind.IdentifierToken, "\\u0061", "a"));
             AssertTokens("&#x61;", Token(SyntaxKind.IdentifierToken, "&#x61;", "a"));
 
             AssertTokens("ab", Token(SyntaxKind.IdentifierToken, "ab"));
-            AssertTokens("\u0061b", Token(SyntaxKind.IdentifierToken, "\u0061b", "ab"));
-            AssertTokens("a\u0062", Token(SyntaxKind.IdentifierToken, "a\u0062", "ab"));
+            AssertTokens("\\u0061b", Token(SyntaxKind.IdentifierToken, "\\u0061b", "ab"));
+            AssertTokens("a\\u0062", Token(SyntaxKind.IdentifierToken, "a\\u0062", "ab"));
             AssertTokens("&#x61;b", Token(SyntaxKind.IdentifierToken, "&#x61;b", "ab"));
             AssertTokens("a&#x62;", Token(SyntaxKind.IdentifierToken, "a&#x62;", "ab"));
         }
