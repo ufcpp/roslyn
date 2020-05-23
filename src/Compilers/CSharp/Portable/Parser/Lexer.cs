@@ -2110,26 +2110,44 @@ top:
                     default:
                         {
                             // This is the 'expensive' call
-                            if (_identLen == 0 && consumedChar > 127 && SyntaxFacts.IsIdentifierStartCharacter(consumedChar))
+                            if (consumedChar > 127)
                             {
-                                break;
-                            }
-                            else if (_identLen > 0 && consumedChar > 127 && SyntaxFacts.IsIdentifierPartCharacter(consumedChar))
-                            {
-                                //// BUG 424819 : Handle identifier chars > 0xFFFF via surrogate pairs
-                                if (UnicodeCharacterUtilities.IsFormattingChar(consumedChar))
+                                int codePoint = consumedChar;
+
+                                if (consumedSurrogate == SlidingTextWindow.InvalidCharacter && char.IsHighSurrogate(consumedChar))
                                 {
-                                    continue; // Ignore formatting characters
+                                    consumedSurrogate = TextWindow.NextChar();
                                 }
 
-                                break;
+                                if (consumedSurrogate != SlidingTextWindow.InvalidCharacter)
+                                {
+                                    if (!char.IsLowSurrogate(consumedSurrogate))
+                                    {
+                                        TextWindow.Reset(beforeConsumed);
+                                        goto LoopExit;
+                                    }
+
+                                    codePoint = char.ConvertToUtf32(consumedChar, consumedSurrogate);
+                                }
+
+                                if (_identLen == 0 && SyntaxFacts.IsIdentifierStartCharacter(codePoint))
+                                {
+                                    break;
+                                }
+                                else if (_identLen > 0 && SyntaxFacts.IsIdentifierPartCharacter(codePoint))
+                                {
+                                    if (UnicodeCharacterUtilities.IsFormattingChar(codePoint))
+                                    {
+                                        continue; // Ignore formatting characters
+                                    }
+
+                                    break;
+                                }
                             }
-                            else
-                            {
-                                // Not a valid identifier character, so bail.
-                                TextWindow.Reset(beforeConsumed);
-                                goto LoopExit;
-                            }
+
+                            // Not a valid identifier character, so bail.
+                            TextWindow.Reset(beforeConsumed);
+                            goto LoopExit;
                         }
                 }
 
@@ -4116,12 +4134,24 @@ top:
                     }
                     else
                     {
-                        char bad = TextWindow.NextChar();
+                        char high = TextWindow.NextChar();
+                        uint bad = high;
+
+                        if (char.IsHighSurrogate(high))
+                        {
+                            char low = TextWindow.PeekChar();
+                            if (char.IsLowSurrogate(low))
+                            {
+                                TextWindow.AdvanceChar();
+                                bad = (uint)char.ConvertToUtf32(high, low);
+                            }
+                        }
+
                         info.Text = TextWindow.GetText(intern: false);
 
                         // If it's valid in XML, then it was unexpected in cref mode.
                         // Otherwise, it's just bad XML.
-                        if (MatchesProductionForXmlChar((uint)bad))
+                        if (MatchesProductionForXmlChar(bad))
                         {
                             this.AddCrefError(ErrorCode.ERR_UnexpectedCharacter, info.Text);
                         }

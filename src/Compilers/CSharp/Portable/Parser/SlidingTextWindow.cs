@@ -489,6 +489,35 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax
                     }
 
                     character = (char)intChar;
+
+                    if (char.IsHighSurrogate(character) && this.PeekChar() == '\\' && this.PeekChar(1) == 'u')
+                    {
+                        this.AdvanceChar();
+                        char lowCharacter = this.PeekChar();
+                        this.AdvanceChar();
+
+                        for (int i = 0; i < 4; i++)
+                        {
+                            char ch2 = this.PeekChar();
+                            if (!SyntaxFacts.IsHexDigit(ch2))
+                            {
+                                if (lowCharacter == 'u')
+                                {
+                                    if (!peek)
+                                    {
+                                        info = CreateIllegalEscapeDiagnostic(start);
+                                    }
+                                }
+
+                                break;
+                            }
+
+                            intChar = (intChar << 4) + SyntaxFacts.HexValue(ch2);
+                            this.AdvanceChar();
+                        }
+
+                        surrogateCharacter = (char)intChar;
+                    }
                 }
             }
 
