@@ -36,6 +36,13 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
             "a\u200Db", // ZWJ
             "a\u200Fb", // Right-to-Left mark
 
+            // Surrogate Pairs
+            "\U00013000", // 𓀀 (Egyptian Hieroglyph)
+            "\U00012000", // 𒀀 (Cuneiform)
+            "\U00010480\U00010481\U000104A0\U000104A1", // 𐒀𐒁𐒠𐒡 (Osmanya Letter + Digit)
+            "\U0001D538\U0001D7D8", // double-struck A0
+            "\U00020000", // 𠀀 (Supplementary Ideographic Plane)
+            "\u845B\U000E0100", // 葛󠄀 (葛 + Ideographic Variation Selector)
         };
 
         private static readonly string[] _invalidIdentifiers =
@@ -44,6 +51,9 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
             "\u06F1", // ء (Arabic Digit)
             "\u2200", // ∀
             "\u2015", // ― (Horizontal Bar)
+
+            // Surrogate Pairs
+            "\U0001F600", // 😀 (Emoji)
         };
 
         public static readonly IEnumerable<object[]> Identifiers;
