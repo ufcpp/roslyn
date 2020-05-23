@@ -4423,7 +4423,18 @@ class enable
 
         [Theory]
         [MemberData(nameof(Identifiers))]
-        public void TestDefineValidIdentifiers(bool valid, string text, string valueText)
+        public void TestDefineValidIdentifiers(bool valid, string text)
+        {
+            string valueText = IdentifierTestData.RemoveCf(text);
+            TestDefineValidIdentifiersInternal(valid, text, valueText);
+
+            foreach (var escaped in IdentifierTestData.GetEscapeStrings(text))
+            {
+                TestDefineValidIdentifiersInternal(valid, escaped, valueText);
+            }
+        }
+
+        private void TestDefineValidIdentifiersInternal(bool valid, string text, string valueText)
         {
             var source = @"
 #define " + text + @"
@@ -4446,7 +4457,18 @@ class A { }
 
         [Theory]
         [MemberData(nameof(Identifiers))]
-        public void TestIfValidIdentifiers(bool valid, string text, string valueText)
+        public void TestIfValidIdentifiers(bool valid, string text)
+        {
+            string valueText = IdentifierTestData.RemoveCf(text);
+            TestIfValidIdentifiersInternal(valid, text, valueText);
+
+            foreach (var escaped in IdentifierTestData.GetEscapeStrings(text))
+            {
+                TestIfValidIdentifiersInternal(valid, escaped, valueText);
+            }
+        }
+
+        private void TestIfValidIdentifiersInternal(bool valid, string text, string valueText)
         {
             var source = @"
 #if " + text + @"

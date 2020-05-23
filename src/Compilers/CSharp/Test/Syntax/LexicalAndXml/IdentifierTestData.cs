@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using Microsoft.CodeAnalysis.PooledObjects;
 
 namespace Microsoft.CodeAnalysis.CSharp.UnitTests
 {
@@ -48,42 +50,165 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
 
         static IdentifierTestData()
         {
-            Identifiers = BuildIdentifierList();
+            Identifiers =
+                _validIdentifiers.Select(x => new object[] { true, x })
+                .Concat(_invalidIdentifiers.Select(x => new object[] { false, x }))
+                .ToArray();
         }
 
-        private static IEnumerable<object[]> BuildIdentifierList()
+        public static string RemoveCf(string s)
         {
-            StringBuilder builder = new StringBuilder();
-            List<object[]> identifiers = new List<object[]>();
-
-            foreach (var x in _validIdentifiers)
+            if (!s.Any(c => CharUnicodeInfo.GetUnicodeCategory(c) == UnicodeCategory.Format))
             {
-                identifiers.Add(new object[] { true, x, removeCf(x) });
+                return s;
             }
 
-            foreach (var x in _invalidIdentifiers)
+            StringBuilder builder = PooledStringBuilder.GetInstance();
+            builder.Clear();
+            foreach (var c in s)
             {
-                identifiers.Add(new object[] { false, x, removeCf(x) });
-            }
-
-            return identifiers;
-
-            string removeCf(string s)
-            {
-                if (!s.Any(c => CharUnicodeInfo.GetUnicodeCategory(c) == UnicodeCategory.Format))
+                if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.Format)
                 {
-                    return s;
+                    builder.Append(c);
                 }
+            }
+            return builder.ToString();
+        }
 
-                builder.Clear();
-                foreach (var c in s)
+        public static IEnumerable<string> GetEscapeStrings(string s, bool cref = false)
+        {
+            StringBuilder builder = PooledStringBuilder.GetInstance();
+            yield return EscapeAll(s, _unicode4dig, builder);
+            if (s.Length > 1)
+            {
+                yield return EscapeFirst(s, _unicode4dig, builder);
+            }
+            yield return EscapeAll(s, _unicode8dig, builder);
+            if (s.Length > 1)
+            {
+                yield return EscapeFirst(s, _unicode8dig, builder);
+            }
+
+            if (cref)
+            {
+                yield return EscapeAll(s, _entityDig, builder);
+                if (s.Length > 1)
                 {
-                    if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.Format)
+                    yield return EscapeFirst(s, _entityDig, builder);
+                }
+                yield return EscapeAll(s, _entityHex, builder);
+                if (s.Length > 1)
+                {
+                    yield return EscapeFirst(s, _entityHex, builder);
+                }
+            }
+        }
+
+        private static readonly Action<int, StringBuilder> _unicode4dig = (codePoint, builder) =>
+        {
+            if (codePoint >= 0x10000)
+            {
+                string pair = char.ConvertFromUtf32(codePoint);
+                builder.Append("\\u");
+                builder.AppendFormat("{0:X4}", (int)pair[0]);
+                builder.Append("\\u");
+                builder.AppendFormat("{0:X4}", (int)pair[1]);
+            }
+            else
+            {
+                builder.Append("\\u");
+                builder.AppendFormat("{0:X4}", codePoint);
+            }
+        };
+
+        private static readonly Action<int, StringBuilder> _unicode8dig = (codePoint, builder) =>
+        {
+            builder.Append("\\U");
+            builder.AppendFormat("{0:X8}", codePoint);
+        };
+
+        private static readonly Action<int, StringBuilder> _entityDig = (codePoint, builder) =>
+        {
+            builder.Append("&#");
+            builder.Append(codePoint);
+            builder.Append(';');
+        };
+
+        private static readonly Action<int, StringBuilder> _entityHex = (codePoint, builder) =>
+        {
+            builder.Append("&#x");
+            builder.AppendFormat("{0:X}", codePoint);
+            builder.Append(';');
+        };
+
+        private static string EscapeAll(string s, Action<int, StringBuilder> escape, StringBuilder builder)
+        {
+            builder.Clear();
+            foreach (var c in EnumerateCodePoints(s))
+            {
+                escape(c, builder);
+            }
+            return builder.ToString();
+        }
+
+        private static string EscapeFirst(string s, Action<int, StringBuilder> escape, StringBuilder builder)
+        {
+            builder.Clear();
+            bool first = true;
+            foreach (var c in EnumerateCodePoints(s))
+            {
+                if (first)
+                {
+                    escape(c, builder);
+                    first = false;
+                }
+                else
+                {
+                    if (c >= 0x10000)
                     {
-                        builder.Append(c);
+                        builder.Append(char.ConvertFromUtf32(c));
+                    }
+                    else
+                    {
+                        builder.Append((char)c);
                     }
                 }
-                return builder.ToString();
+            }
+            return builder.ToString();
+        }
+
+        private static IEnumerable<int> EnumerateCodePoints(string s)
+        {
+            char high = '\0';
+
+            for (int i = 0; i < s.Length; i++)
+            {
+                char c = s[i];
+                if (char.IsHighSurrogate(c))
+                {
+                    high = c;
+                }
+                else
+                {
+                    if (high != 0)
+                    {
+                        if (char.IsLowSurrogate(c))
+                        {
+                            yield return char.ConvertToUtf32(high, c);
+                        }
+                        else
+                        {
+                            // imcomplete surrogates
+                            yield return high;
+                            yield return c;
+                        }
+                        high = '\0';
+                    }
+                    else
+                    {
+                        yield return c;
+                    }
+                }
             }
         }
     }

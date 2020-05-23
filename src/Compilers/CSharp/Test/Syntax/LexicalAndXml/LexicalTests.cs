@@ -546,7 +546,21 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
         [Theory]
         [Trait("Feature", "Identifiers")]
         [MemberData(nameof(Identifiers))]
-        public void TestValidIdentifier(bool valid, string text, string valueText)
+        public void TestValidIdentifier(bool valid, string text)
+        {
+            string valueText = IdentifierTestData.RemoveCf(text);
+            TestValidIdentifierInternal(valid, text, valueText);
+
+            if (valid)
+            {
+                foreach (var escaped in IdentifierTestData.GetEscapeStrings(text))
+                {
+                    TestValidIdentifierInternal(valid, escaped, valueText);
+                }
+            }
+        }
+
+        private void TestValidIdentifierInternal(bool valid, string text, string valueText)
         {
             var token = LexToken(text);
 

@@ -38,7 +38,21 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
 
         [Theory]
         [MemberData(nameof(Identifiers))]
-        public void TestLexValidIdentifiers(bool valid, string text, string valueText)
+        public void TestLexValidIdentifiers(bool valid, string text)
+        {
+            string valueText = IdentifierTestData.RemoveCf(text);
+            TestLexValidIdentifiersInternal(valid, text, valueText);
+
+            if (valid)
+            {
+                foreach (var escaped in IdentifierTestData.GetEscapeStrings(text, true))
+                {
+                    TestLexValidIdentifiersInternal(valid, escaped, valueText);
+                }
+            }
+        }
+
+        private void TestLexValidIdentifiersInternal(bool valid, string text, string valueText)
         {
             var kind = valid ? SyntaxKind.IdentifierToken : SyntaxKind.BadToken;
             AssertTokens(text, Token(kind, text, valueText));
