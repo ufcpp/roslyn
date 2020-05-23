@@ -34,6 +34,16 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
             AssertTokens("a&#x62;", Token(SyntaxKind.IdentifierToken, "a&#x62;", "ab"));
         }
 
+        public static IEnumerable<object[]> Identifiers = IdentifierTestData.Identifiers;
+
+        [Theory]
+        [MemberData(nameof(Identifiers))]
+        public void TestLexValidIdentifiers(bool valid, string text, string valueText)
+        {
+            var kind = valid ? SyntaxKind.IdentifierToken : SyntaxKind.BadToken;
+            AssertTokens(text, Token(kind, text, valueText));
+        }
+
         [Fact]
         public void TestLexKeywords()
         {
