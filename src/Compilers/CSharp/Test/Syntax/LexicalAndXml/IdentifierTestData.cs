@@ -43,6 +43,7 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
             "\U0001D538\U0001D7D8", // double-struck A0
             "\U00020000", // 𠀀 (Supplementary Ideographic Plane)
             "\u845B\U000E0100", // 葛󠄀 (葛 + Ideographic Variation Selector)
+            "a\U000E0072\U000E006F\U000E0073\U000E006C\U000E0079\U000E006E\U000E007Fb", // Tag (Cf category)
         };
 
         private static readonly string[] _invalidIdentifiers =
@@ -72,18 +73,34 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
 
         public static string RemoveCf(string s)
         {
-            if (!s.Any(c => CharUnicodeInfo.GetUnicodeCategory(c) == UnicodeCategory.Format))
+            bool anyFormat = false;
+            foreach (var c in EnumerateCodePoints(s))
+            {
+                if (GetUnicodeCategory(c) == UnicodeCategory.Format)
+                {
+                    anyFormat = true;
+                }
+            }
+
+            if (!anyFormat)
             {
                 return s;
             }
 
             StringBuilder builder = PooledStringBuilder.GetInstance();
             builder.Clear();
-            foreach (var c in s)
+            foreach (var c in EnumerateCodePoints(s))
             {
-                if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.Format)
+                if (GetUnicodeCategory(c) != UnicodeCategory.Format)
                 {
-                    builder.Append(c);
+                    if (c >= 0x10000)
+                    {
+                        builder.Append(char.ConvertFromUtf32(c));
+                    }
+                    else
+                    {
+                        builder.Append((char)c);
+                    }
                 }
             }
             return builder.ToString();
@@ -223,6 +240,19 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
                         yield return c;
                     }
                 }
+            }
+        }
+
+        private static UnicodeCategory GetUnicodeCategory(int ch)
+        {
+            if (ch < 0x10000)
+            {
+                return CharUnicodeInfo.GetUnicodeCategory((char)ch);
+            }
+            else
+            {
+                string s = char.ConvertFromUtf32(ch);
+                return CharUnicodeInfo.GetUnicodeCategory(s, 0);
             }
         }
     }

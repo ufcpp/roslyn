@@ -25,6 +25,7 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
             new [] { "\u02B0\u02B1" }, // ʰʱ (Lm category)
             new [] { "\u2160\u2161" }, // ⅠⅡ (Nl category)
             new [] { "a\u203Fb\u2040c" }, // Tie (Pc category)
+
             // Surrogate Pairs
             new [] { "\U00013000" }, // 𓀀 (Egyptian Hieroglyph)
             new [] { "\U00012000" }, // 𒀀 (Cuneiform)
@@ -32,6 +33,7 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
             new [] { "\U0001D538\U0001D7D8" }, // double-struck A0
             new [] { "\U00020000" }, // 𠀀 (Supplementary Ideographic Plane)
             new [] { "\u845B\U000E0100" }, // 葛󠄀 (葛 + Ideographic Variation Selector)
+            new [] { "a\U000E0072\U000E006F\U000E0073\U000E006C\U000E0079\U000E006E\U000E007Fb" }, // Tag (Cf category)
         };
 
         public static readonly object[][] InvalidIdentifiers =

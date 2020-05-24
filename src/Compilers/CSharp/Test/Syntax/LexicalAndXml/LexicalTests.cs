@@ -352,6 +352,36 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
 
         [Fact]
         [Trait("Feature", "Identifiers")]
+        public void TestIdentifierWithFormatCharacters()
+        {
+            var text = "a\u200Db"; // ZWJ (Cf category)
+            var token = LexToken(text);
+
+            Assert.NotEqual(default, token);
+            Assert.Equal(SyntaxKind.IdentifierToken, token.Kind());
+            Assert.Equal(text, token.Text);
+            var errors = token.Errors();
+            Assert.Equal(0, errors.Length);
+            Assert.Equal("ab", token.ValueText);
+        }
+
+        [Fact]
+        [Trait("Feature", "Identifiers")]
+        public void TestIdentifierWithSurrogatePairFormatCharacters()
+        {
+            var text = "a\U000E0072\U000E006F\U000E0073\U000E006C\U000E0079\U000E006E\U000E007Fb"; // Tag characters (Cf category)
+            var token = LexToken(text);
+
+            Assert.NotEqual(default, token);
+            Assert.Equal(SyntaxKind.IdentifierToken, token.Kind());
+            Assert.Equal(text, token.Text);
+            var errors = token.Errors();
+            Assert.Equal(0, errors.Length);
+            Assert.Equal("ab", token.ValueText);
+        }
+
+        [Fact]
+        [Trait("Feature", "Identifiers")]
         public void TestVerbatimSingleLetterIdentifier()
         {
             var text = "@x";

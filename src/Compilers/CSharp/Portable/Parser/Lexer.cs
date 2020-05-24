@@ -1877,6 +1877,11 @@ top:
                                         else
                                         {
                                             TextWindow.AdvanceChar();
+
+                                            if (surrogateCharacter != SlidingTextWindow.InvalidCharacter)
+                                            {
+                                                TextWindow.AdvanceChar();
+                                            }
                                         }
 
                                         continue; // Ignore formatting characters
