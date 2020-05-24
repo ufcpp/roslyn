@@ -734,6 +734,37 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
 
         [Fact]
         [Trait("Feature", "Literals")]
+        public void TestStringLiteralEscapedSurrogates()
+        {
+            var literals = new (string escaped, string unescaped)[]
+            {
+                ("\\uD800\\uDC00", "\uD800\uDC00"),
+                ("\\uD800", "\uD800"),
+                ("\\uDC00", "\uDC00"),
+                ("\\uDC00\\uD800", "\uDC00\uD800"),
+                ("\\uD800a\\uDC00", "\uD800a\uDC00"),
+                ("\\uD800\\u200D\\uDC00", "\uD800\u200D\uDC00"),
+                ("\\uD800\\u00FF\\uDC00", "\uD800\u00FF\uDC00"),
+                ("\\uD800\\u0FFF\\uDC00", "\uD800\u0FFF\uDC00"),
+                ("\\uD800\\uFFFF\\uDC00", "\uD800\uFFFF\uDC00"),
+            };
+
+            foreach (var (escaped, unescaped) in literals)
+            {
+                var text = '"' + escaped + '"';
+                var token = LexToken(text);
+
+                Assert.NotEqual(default, token);
+                Assert.Equal(SyntaxKind.StringLiteralToken, token.Kind());
+                Assert.Equal(text, token.Text);
+                var errors = token.Errors();
+                Assert.Equal(0, errors.Length);
+                Assert.Equal(unescaped, token.ValueText);
+            }
+        }
+
+        [Fact]
+        [Trait("Feature", "Literals")]
         public void TestStringLiteralWithUnicode()
         {
             var text = "\"҉ ҉̵̞̟̠̖̗̘̙̜̝̞̟̠͇̊̋̌̍̎̏̐̑̒̓̔̊̋̌̍̎̏̐̑̒̓̔̿̿̿… ͡҉҉ ̵̡̢̛̗̘̙̜̝̞̟̠͇̊̋̌̍̎̏̿̿̿̚ ҉ ҉҉̡̢̡̢̛̛̖̗̘̙̜̝̞̟̠̖̗̘̙̜̝̞̟̠̊̋̌̍̎̏̐̑̒̓̔̊̋̌… ̒̓̔̕̚ ̍̎̏̐̑̒̓̔̕̚̕̚ ̡̢̛̗̘̙̜̝̞̟̠̊̋̌̍̎̏̚ ̡̢̡̢̛̛̖̗̘̙̜̝̞̟̠̖̗̘̙̜̝̞̟̠̊̋̌̍̎̏̐̑̒̓̔̊̋̌̍̎… ̕̚̕̚ ̔̕̚̕̚҉ ҉̵̞̟̠̖̗̘̙̜̝̞̟̠͇̊̋̌̍̎̏̐̑̒̓̔̊̋̌̍̎̏̐̑̒̓̔̿̿̿… ͡҉҉ ̵̡̢̛̗̘̙̜̝̞̟̠͇̊̋̌̍̎̏̿̿̿̚ ҉\"";
