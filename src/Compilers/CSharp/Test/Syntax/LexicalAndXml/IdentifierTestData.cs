@@ -54,6 +54,10 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
 
             // Surrogate Pairs
             "\U0001F600", // 😀 (Emoji)
+
+            // Incomplete Surrogates
+            "\uD800",
+            "\uDF00",
         };
 
         public static readonly IEnumerable<object[]> Identifiers;
