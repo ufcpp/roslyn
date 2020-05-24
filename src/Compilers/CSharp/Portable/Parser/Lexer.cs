@@ -2995,6 +2995,7 @@ top:
                     if (SyntaxFacts.IsIdentifierStartCharacter(character))
                     {
                         this.ScanIdentifierOrKeyword(ref info);
+                        break;
                     }
                     else if(char.IsHighSurrogate(character))
                     {
@@ -3007,31 +3008,30 @@ top:
                             if (SyntaxFacts.IsIdentifierStartCharacter(codePoint))
                             {
                                 this.ScanIdentifierOrKeyword(ref info);
+                                break;
                             }
                         }
+                    }
+
+                    // unknown single character
+                    if (isEscaped)
+                    {
+                        SyntaxDiagnosticInfo error;
+                        TextWindow.NextCharOrUnicodeEscape(out surrogateCharacter, out error);
+                        AddError(error);
                     }
                     else
                     {
-                        // unknown single character
-                        if (isEscaped)
-                        {
-                            SyntaxDiagnosticInfo error;
-                            TextWindow.NextCharOrUnicodeEscape(out surrogateCharacter, out error);
-                            AddError(error);
-                        }
-                        else
+                        TextWindow.AdvanceChar();
+
+                        if (char.IsHighSurrogate(character) && char.IsLowSurrogate(TextWindow.PeekChar()))
                         {
                             TextWindow.AdvanceChar();
-
-                            if (char.IsHighSurrogate(character) && char.IsLowSurrogate(TextWindow.PeekChar()))
-                            {
-                                TextWindow.AdvanceChar();
-                            }
                         }
-
-                        info.Kind = SyntaxKind.None;
-                        info.Text = TextWindow.GetText(true);
                     }
+
+                    info.Kind = SyntaxKind.None;
+                    info.Text = TextWindow.GetText(true);
 
                     break;
             }
